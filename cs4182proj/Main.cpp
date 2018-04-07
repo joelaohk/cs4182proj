@@ -11,9 +11,14 @@
 #include <string>
 #include <cmath>
 
+#include <iostream>
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 #include <SDL/SDL_image.h>
+#include <GL\glut.h>
+#include <GL/GL.h>
+
+using namespace std;
 
 #define PI 3.141592653589793
 
@@ -126,6 +131,8 @@ void CompileLists()
 	glEndList();
 }
 
+double currLightPosX=4.0, currLightPosY = 2.0, currLightPosZ = 2.0;
+
 /*
 * DrawRoom
 *	This will render the entire scene (in other words, draw the room).
@@ -158,6 +165,11 @@ void DrawRoom()
 		glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &FloorTexWidth);
 		glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &FloorTexHeight);
 
+		
+
+		glEnable(GL_LIGHTING);
+		
+
 		Once = true;
 	}
 
@@ -169,8 +181,126 @@ void DrawRoom()
 
 	glTranslated(-X, -Y, -Z);
 
+	glPushMatrix();
+	//glPushAttrib(GL_COLOR_BUFFER_BIT);
+	
+	glShadeModel(GL_SMOOTH);
+	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+	glEnable(GL_COLOR_MATERIAL);
+	//glClear(GL_COLOR_BUFFER_BIT);
+	GLfloat normal[] = { 1, 1, 1, 1 };
+	GLfloat ballSpecular[] = { 1, 1, 1, 1 };
+	GLfloat ballEmission[] = { 0, 0, 0, 1 };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ballSpecular);
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, ballEmission);
+
+	GLfloat redballAmbient[] = { 0.9725, 0.3137, 0.2706, 1 };
+	GLfloat redballDiffuse[] = { 0.9725, 0.3137, 0.2706, 1 };
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, redballAmbient);
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballDiffuse);
+	glTranslated(-0.75, 0, -2);
+	GLfloat red_light_position[] = { 0,0,0,1 };
+	//std::cout << currLightPosY << endl;
+	GLfloat red_ambient[] = { 0.9725, 0.3137, 0.2706,1 };
+	GLfloat red_diffuse[] = { 0.9725, 0.3137, 0.2706,1 };
+	/*glLightfv(GL_LIGHT1, GL_POSITION, red_light_position);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, redballAmbient);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, redballDiffuse);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, ballSpecular);
+	
+	glEnable(GL_LIGHT1);*/
+	glMaterialfv(GL_FRONT, GL_EMISSION, redballAmbient);
+	glColor3f(0.9725, 0.3137, 0.2706);
+	glutSolidSphere(0.1, 20, 20);
+
+	glTranslated(0.5, 0, 0);
+	GLfloat blueballAmbient[] = { 0.298, 0.4235, 0.7098, 1 };
+	GLfloat blueballDiffuse[] = { 0.298, 0.4235, 0.7098, 1 };
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, blueballAmbient);
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, blueballDiffuse);
+	/*glLightfv(GL_LIGHT2, GL_POSITION, red_light_position);
+	glLightfv(GL_LIGHT2, GL_AMBIENT, blueballAmbient);
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, blueballDiffuse);
+	glLightfv(GL_LIGHT2, GL_SPECULAR, ballSpecular);
+	
+	glEnable(GL_LIGHT2);*/
+	glMaterialfv(GL_FRONT, GL_EMISSION, blueballAmbient);
+	glColor3f(0.298, 0.4235, 0.7098);
+	glutSolidSphere(0.1, 20, 20);
+
+	GLfloat yellowballAmbient[] = { 0.9922, 0.9647, 0.3569, 1 };
+	GLfloat yellowballDiffuse[] = { 0.9922, 0.9647, 0.3569, 1 };
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, yellowballAmbient);
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, yellowballDiffuse);
+	glTranslated(0.5, 0, 0);
+	/*glLightfv(GL_LIGHT3, GL_POSITION, red_light_position);
+	glLightfv(GL_LIGHT3, GL_AMBIENT, yellowballAmbient);
+	glLightfv(GL_LIGHT3, GL_DIFFUSE, yellowballDiffuse);
+	glLightfv(GL_LIGHT3, GL_SPECULAR, ballSpecular);
+	
+	glEnable(GL_LIGHT3);*/
+	glMaterialfv(GL_FRONT, GL_EMISSION, yellowballAmbient);
+	glColor3f(0.9922, 0.9647, 0.3569);
+	glutSolidSphere(0.1, 20, 20);
+
+	GLfloat greenballAmbient[] = { 0.4392, 0.9373, 0.502, 1 };
+	GLfloat greenballDiffuse[] = { 0.4392, 0.9373, 0.502, 1 };
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, greenballAmbient);
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, greenballDiffuse);
+	glTranslated(0.5, 0, 0);
+	/*glLightfv(GL_LIGHT4, GL_POSITION, red_light_position);
+	glLightfv(GL_LIGHT4, GL_AMBIENT, greenballAmbient);
+	glLightfv(GL_LIGHT4, GL_DIFFUSE, greenballDiffuse);
+	glLightfv(GL_LIGHT4, GL_SPECULAR, ballSpecular);
+	
+	glEnable(GL_LIGHT4);*/
+	glMaterialfv(GL_FRONT, GL_EMISSION, greenballAmbient);
+	glColor3f(0.4392, 0.9373, 0.502);
+	glutSolidSphere(0.1, 20, 20);
+
+	GLfloat purpleballAmbient[] = { 0.6784, 0.4392, 0.7608, 1 };
+	GLfloat purpleballDiffuse[] = { 0.6784, 0.4392, 0.7608, 1 };
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, purpleballAmbient);
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, purpleballDiffuse);
+	glTranslated(0.5, 0, 0);
+	/*glLightfv(GL_LIGHT5, GL_POSITION, red_light_position);
+	glLightfv(GL_LIGHT5, GL_AMBIENT, purpleballAmbient);
+	glLightfv(GL_LIGHT5, GL_DIFFUSE, purpleballDiffuse);
+	glLightfv(GL_LIGHT5, GL_SPECULAR, ballSpecular);
+	
+	glEnable(GL_LIGHT5);*/
+	glMaterialfv(GL_FRONT, GL_EMISSION, purpleballAmbient);
+	glColor3f(0.6784, 0.4392, 0.7608);
+	glutSolidSphere(0.1, 20, 20);
+	glColor3f(1, 1, 1);
+	
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, normal);
+	//glFlush();
+	//glPopAttrib();
+	glPopMatrix();
+
+	glPushMatrix();
+	GLfloat light_position[] = {0,-0.5,0,1};
+	//std::cout << currLightPosY << endl;
+	GLfloat ambient[] = { 0,0,0,1 };
+	GLfloat diffuse[] = { 1,1,1,1 };
+	GLfloat specular[] = { 0,0,0,1 };
+	GLfloat glLight[] = { 1, 1, 1, 1 };
+
+
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+	glLightModelfv(GL_FRONT_AND_BACK, glLight);
+	glEnable(GL_LIGHT0);
+	glPopMatrix();
+
 	/* Set the coordinate system. */
 	glOrtho(0, 800, 600, 0, -1, 1);
+	
+	
+	
 
 	/* Draw walls. */
 	glBindTexture(GL_TEXTURE_2D, Textures[0]);
@@ -229,6 +359,7 @@ void DrawRoom()
 	glVertex3d(1000, 500, -4.0);
 	glEnd();
 
+
 	/* Draw the floor and the ceiling, this is done separatly because glBindTexture isn't allowed inside glBegin. */
 	glBindTexture(GL_TEXTURE_2D, Textures[1]);
 
@@ -259,10 +390,14 @@ void DrawRoom()
 	glVertex3d(-200, 0, -4.0);
 	glEnd();
 
+	
+
 	/* Now we're going to render some boxes using display lists. */
 	glPushMatrix();
 	/* Let's make it a bit smaller... */
 	glScaled(0.5, 0.4, 0.5);
+
+	
 
 	/* Can't bind textures while generating a display list, but we can give it texture coordinates and bind it now. */
 	glBindTexture(GL_TEXTURE_2D, Textures[2]);
@@ -292,9 +427,15 @@ void DrawRoom()
 		glCallList(BoxList);
 	}
 
+	
+
 	glPopMatrix();
 
 	glPopMatrix();
+}
+
+void menu(int value) {
+
 }
 
 int main(int argc, char **argv)
@@ -384,6 +525,13 @@ int main(int argc, char **argv)
 		false  /* Right arrow down? */
 	};
 
+	glutCreateMenu(menu);
+	glutAddMenuEntry("Fuck", 1);
+	glutAddMenuEntry("Damn", 2);
+	glutAddMenuEntry("Shit", 3);
+	glutLeaveGameMode();
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
+
 	/* Application loop. */
 	for (;;)
 	{
@@ -442,30 +590,32 @@ int main(int argc, char **argv)
 		glPushMatrix();
 		DrawRoom();
 		glPopMatrix();
+		
+		
 
 		/* Move if the keys are pressed, this is explained in the tutorial. */
 		if (Keys[0])
 		{
-			X -= cos(DegreeToRadian(ViewAngleHor + 90.0)) * 0.05;
-			Z -= sin(DegreeToRadian(ViewAngleHor + 90.0)) * 0.05;
+			X -= cos(DegreeToRadian(ViewAngleHor + 90.0)) * 0.025;
+			Z -= sin(DegreeToRadian(ViewAngleHor + 90.0)) * 0.025;
 		}
 
 		if (Keys[1])
 		{
-			X += cos(DegreeToRadian(ViewAngleHor + 90.0)) * 0.05;
-			Z += sin(DegreeToRadian(ViewAngleHor + 90.0)) * 0.05;
+			X += cos(DegreeToRadian(ViewAngleHor + 90.0)) * 0.025;
+			Z += sin(DegreeToRadian(ViewAngleHor + 90.0)) * 0.025;
 		}
 
 		if (Keys[2])
 		{
-			X += cos(DegreeToRadian(ViewAngleHor + 180.0)) * 0.05;
-			Z += sin(DegreeToRadian(ViewAngleHor + 180.0)) * 0.05;
+			X += cos(DegreeToRadian(ViewAngleHor + 180.0)) * 0.025;
+			Z += sin(DegreeToRadian(ViewAngleHor + 180.0)) * 0.025;
 		}
 
 		if (Keys[3])
 		{
-			X -= cos(DegreeToRadian(ViewAngleHor + 180.0)) * 0.05;
-			Z -= sin(DegreeToRadian(ViewAngleHor + 180.0)) * 0.05;
+			X -= cos(DegreeToRadian(ViewAngleHor + 180.0)) * 0.025;
+			Z -= sin(DegreeToRadian(ViewAngleHor + 180.0)) * 0.025;
 		}
 
 		/* Swap the display buffers. */
