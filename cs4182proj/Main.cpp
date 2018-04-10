@@ -133,6 +133,10 @@ void CompileLists()
 
 double currLightPosX=4.0, currLightPosY = 2.0, currLightPosZ = 2.0;
 
+double init = -0.8;
+double xPos = init;
+char direction = 'N';
+
 /*
 * DrawRoom
 *	This will render the entire scene (in other words, draw the room).
@@ -182,125 +186,167 @@ void DrawRoom()
 	glTranslated(-X, -Y, -Z);
 
 	glPushMatrix();
-	//glPushAttrib(GL_COLOR_BUFFER_BIT);
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	
 	glShadeModel(GL_SMOOTH);
-	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT);
 	glEnable(GL_COLOR_MATERIAL);
 	//glClear(GL_COLOR_BUFFER_BIT);
 	GLfloat normal[] = { 1, 1, 1, 1 };
 	GLfloat ballSpecular[] = { 1, 1, 1, 1 };
 	GLfloat ballEmission[] = { 0, 0, 0, 1 };
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ballSpecular);
-	//glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, ballEmission);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, ballEmission);
 
 	GLfloat redballAmbient[] = { 0.9725, 0.3137, 0.2706, 1 };
-	GLfloat redballDiffuse[] = { 0.9725, 0.3137, 0.2706, 1 };
+	GLfloat redballDiffuse[] = { 0.9725, 0.3137, 0.2706, 0.5 };
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, redballAmbient);
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballDiffuse);
-	glTranslated(-0.75, 0, -2);
+	glTranslated(xPos, 0, -2);
+	//std::cout << xPos << " " << (xPos <= -0.7501) << endl;
+	if (xPos <= init-0.2) direction = 'P';
+	else if (xPos >= init+0.2) direction = 'N';
+	if (direction == 'N') xPos -= 0.0001;
+	else xPos += 0.0001;
 	GLfloat red_light_position[] = { 0,0,0,1 };
 	//std::cout << currLightPosY << endl;
-	GLfloat red_ambient[] = { 0.9725, 0.3137, 0.2706,1 };
-	GLfloat red_diffuse[] = { 0.9725, 0.3137, 0.2706,1 };
-	/*glLightfv(GL_LIGHT1, GL_POSITION, red_light_position);
+	glLightfv(GL_LIGHT1, GL_POSITION, red_light_position);
 	glLightfv(GL_LIGHT1, GL_AMBIENT, redballAmbient);
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, redballDiffuse);
 	glLightfv(GL_LIGHT1, GL_SPECULAR, ballSpecular);
 	
-	glEnable(GL_LIGHT1);*/
-	glMaterialfv(GL_FRONT, GL_EMISSION, redballAmbient);
+	//glEnable(GL_LIGHT1);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, redballAmbient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballAmbient);
 	glColor3f(0.9725, 0.3137, 0.2706);
 	glutSolidSphere(0.1, 20, 20);
+	glPushMatrix();
+	glScalef(1.1, 1.1, 1.1);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballDiffuse);
+	glutSolidSphere(0.1, 20, 20);
+	glPopMatrix();
 
 	glTranslated(0.5, 0, 0);
-	GLfloat blueballAmbient[] = { 0.298, 0.4235, 0.7098, 1 };
-	GLfloat blueballDiffuse[] = { 0.298, 0.4235, 0.7098, 1 };
-	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, blueballAmbient);
+	GLfloat blue_light_position[] = { 0,0,0,1 };
+	GLfloat blueballAmbient[] = { 0.27451, 0.41961, 0.72549, 1 };
+	GLfloat blueballDiffuse[] = { 0.27451, 0.41961, 0.72549, 0.5 };
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, blueballAmbient)
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, blueballDiffuse);
-	/*glLightfv(GL_LIGHT2, GL_POSITION, red_light_position);
+	glLightfv(GL_LIGHT2, GL_POSITION, blue_light_position);
 	glLightfv(GL_LIGHT2, GL_AMBIENT, blueballAmbient);
 	glLightfv(GL_LIGHT2, GL_DIFFUSE, blueballDiffuse);
 	glLightfv(GL_LIGHT2, GL_SPECULAR, ballSpecular);
-	
-	glEnable(GL_LIGHT2);*/
-	glMaterialfv(GL_FRONT, GL_EMISSION, blueballAmbient);
-	glColor3f(0.298, 0.4235, 0.7098);
+	//glEnable(GL_LIGHT2);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, blueballAmbient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, blueballAmbient);
+	glColor3f(0.27451, 0.41961, 0.72549);
 	glutSolidSphere(0.1, 20, 20);
+	glPushMatrix();
+	glScalef(1.1, 1.1, 1.1);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, blueballDiffuse);
+	glutSolidSphere(0.1, 20, 20);
+	glPopMatrix();
 
 	GLfloat yellowballAmbient[] = { 0.9922, 0.9647, 0.3569, 1 };
-	GLfloat yellowballDiffuse[] = { 0.9922, 0.9647, 0.3569, 1 };
+	GLfloat yellowballDiffuse[] = { 0.9922, 0.9647, 0.3569, 0.5 };
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, yellowballAmbient);
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, yellowballDiffuse);
 	glTranslated(0.5, 0, 0);
-	/*glLightfv(GL_LIGHT3, GL_POSITION, red_light_position);
+	glLightfv(GL_LIGHT3, GL_POSITION, red_light_position);
 	glLightfv(GL_LIGHT3, GL_AMBIENT, yellowballAmbient);
 	glLightfv(GL_LIGHT3, GL_DIFFUSE, yellowballDiffuse);
 	glLightfv(GL_LIGHT3, GL_SPECULAR, ballSpecular);
-	
-	glEnable(GL_LIGHT3);*/
-	glMaterialfv(GL_FRONT, GL_EMISSION, yellowballAmbient);
+	//glEnable(GL_LIGHT3);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, yellowballAmbient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, yellowballAmbient);
 	glColor3f(0.9922, 0.9647, 0.3569);
 	glutSolidSphere(0.1, 20, 20);
+	glColor3f(0.9922, 0.9647, 0.3569);
+	glutSolidSphere(0.1, 20, 20);
+	glPushMatrix();
+	glScalef(1.1, 1.1, 1.1);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, yellowballDiffuse);
+	glutSolidSphere(0.1, 20, 20);
+	glPopMatrix();
 
 	GLfloat greenballAmbient[] = { 0.4392, 0.9373, 0.502, 1 };
-	GLfloat greenballDiffuse[] = { 0.4392, 0.9373, 0.502, 1 };
+	GLfloat greenballDiffuse[] = { 0.4392, 0.9373, 0.502, 0.5 };
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, greenballAmbient);
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, greenballDiffuse);
 	glTranslated(0.5, 0, 0);
-	/*glLightfv(GL_LIGHT4, GL_POSITION, red_light_position);
+	glLightfv(GL_LIGHT4, GL_POSITION, red_light_position);
 	glLightfv(GL_LIGHT4, GL_AMBIENT, greenballAmbient);
 	glLightfv(GL_LIGHT4, GL_DIFFUSE, greenballDiffuse);
 	glLightfv(GL_LIGHT4, GL_SPECULAR, ballSpecular);
-	
-	glEnable(GL_LIGHT4);*/
-	glMaterialfv(GL_FRONT, GL_EMISSION, greenballAmbient);
-	glColor3f(0.4392, 0.9373, 0.502);
+	//glEnable(GL_LIGHT4);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, greenballAmbient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, greenballAmbient);
+	glColor4fv(greenballAmbient);
 	glutSolidSphere(0.1, 20, 20);
+	glPushMatrix();
+	glScalef(1.1, 1.1, 1.1);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, greenballDiffuse);
+	glutSolidSphere(0.1, 20, 20);
+	glPopMatrix();
 
-	GLfloat purpleballAmbient[] = { 0.6784, 0.4392, 0.7608, 1 };
-	GLfloat purpleballDiffuse[] = { 0.6784, 0.4392, 0.7608, 1 };
+	GLfloat purple_light_position[] = { 0,0,0,1 };
+	GLfloat purpleballAmbient[] = { 0.6863, 0.4353, 0.7725, 1 };
+	GLfloat purpleballDiffuse[] = { 0.6863, 0.4353, 0.7725, 0.5 };
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, purpleballAmbient);
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, purpleballDiffuse);
 	glTranslated(0.5, 0, 0);
-	/*glLightfv(GL_LIGHT5, GL_POSITION, red_light_position);
+	glLightfv(GL_LIGHT5, GL_POSITION, purple_light_position);
 	glLightfv(GL_LIGHT5, GL_AMBIENT, purpleballAmbient);
 	glLightfv(GL_LIGHT5, GL_DIFFUSE, purpleballDiffuse);
 	glLightfv(GL_LIGHT5, GL_SPECULAR, ballSpecular);
 	
-	glEnable(GL_LIGHT5);*/
-	glMaterialfv(GL_FRONT, GL_EMISSION, purpleballAmbient);
-	glColor3f(0.6784, 0.4392, 0.7608);
+	//glEnable(GL_LIGHT5);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, purpleballAmbient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, purpleballAmbient);
+	glColor3f(0.6863, 0.4353, 0.7725);
 	glutSolidSphere(0.1, 20, 20);
 	glColor3f(1, 1, 1);
+	glPushMatrix();
+	glScalef(1.1, 1.1, 1.1);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, purpleballDiffuse);
+	glutSolidSphere(0.1, 20, 20);
+	glPopMatrix();
 	
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, normal);
 	//glFlush();
-	//glPopAttrib();
+	glPopAttrib();
 	glPopMatrix();
 
+	
+	/* Set the coordinate system. */
+	glOrtho(0, 800, 600, 0, -1, 1);
+	
+	
 	glPushMatrix();
-	GLfloat light_position[] = {0,-0.5,0,1};
+	GLfloat light_position[] = { 0, 0, 4,1 };
+	GLfloat light_2_position[] = { -400,0,5,1 };
 	//std::cout << currLightPosY << endl;
 	GLfloat ambient[] = { 0,0,0,1 };
 	GLfloat diffuse[] = { 1,1,1,1 };
 	GLfloat specular[] = { 0,0,0,1 };
 	GLfloat glLight[] = { 1, 1, 1, 1 };
 
-
+	//glClear(GL_COLOR_BUFFER_BIT);
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 	glLightModelfv(GL_FRONT_AND_BACK, glLight);
 	glEnable(GL_LIGHT0);
+
+	glLightfv(GL_LIGHT1, GL_POSITION, light_2_position);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, specular);
+	glLightModelfv(GL_FRONT_AND_BACK, glLight);
+	//glEnable(GL_LIGHT1);
 	glPopMatrix();
 
-	/* Set the coordinate system. */
-	glOrtho(0, 800, 600, 0, -1, 1);
-	
-	
-	
 
 	/* Draw walls. */
 	glBindTexture(GL_TEXTURE_2D, Textures[0]);
@@ -525,12 +571,13 @@ int main(int argc, char **argv)
 		false  /* Right arrow down? */
 	};
 
+	//glutCreateWindow("version 3");
 	glutCreateMenu(menu);
-	glutAddMenuEntry("Fuck", 1);
-	glutAddMenuEntry("Damn", 2);
-	glutAddMenuEntry("Shit", 3);
-	glutLeaveGameMode();
+	glutAddMenuEntry("hello", 1);
+	glutAddMenuEntry("hello", 2);
+	glutAddMenuEntry("hello", 3);
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
+	//glutEnterGameMode();
 
 	/* Application loop. */
 	for (;;)
