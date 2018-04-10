@@ -200,9 +200,10 @@ void DrawRoom()
 
 	GLfloat redballAmbient[] = { 0.9725, 0.3137, 0.2706, 1 };
 	GLfloat redballDiffuse[] = { 0.9725, 0.3137, 0.2706, 0.5 };
+	GLfloat redballDiffuse2[] = { 0.9725, 0.3137, 0.2706, 0.2 };
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, redballAmbient);
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballDiffuse);
-	glTranslated(xPos, 0, -2);
+	glTranslated(xPos, 0, -1.2);
 	//std::cout << xPos << " " << (xPos <= -0.7501) << endl;
 	if (xPos <= init-0.2) direction = 'P';
 	else if (xPos >= init+0.2) direction = 'N';
@@ -210,19 +211,24 @@ void DrawRoom()
 	else xPos += 0.0001;
 	GLfloat red_light_position[] = { 0,0,0,1 };
 	//std::cout << currLightPosY << endl;
-	glLightfv(GL_LIGHT1, GL_POSITION, red_light_position);
-	glLightfv(GL_LIGHT1, GL_AMBIENT, redballAmbient);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, redballDiffuse);
-	glLightfv(GL_LIGHT1, GL_SPECULAR, ballSpecular);
-	
-	//glEnable(GL_LIGHT1);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, redballAmbient);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballAmbient);
+	//glLightfv(GL_LIGHT1, GL_POSITION, red_light_position);
+	//glLightfv(GL_LIGHT1, GL_AMBIENT, redballAmbient);
+	//glLightfv(GL_LIGHT1, GL_DIFFUSE, redballDiffuse);
+	//glLightfv(GL_LIGHT1, GL_SPECULAR, ballSpecular);
+	//
+	////glEnable(GL_LIGHT1);
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, redballAmbient);
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballAmbient);
 	glColor3f(0.9725, 0.3137, 0.2706);
 	glutSolidSphere(0.1, 20, 20);
 	glPushMatrix();
 	glScalef(1.1, 1.1, 1.1);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballDiffuse);
+	glutSolidSphere(0.1, 20, 20);
+	glPopMatrix();
+	glPushMatrix();
+	glScalef(1.2, 1.2, 1.2);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballDiffuse2);
 	glutSolidSphere(0.1, 20, 20);
 	glPopMatrix();
 
@@ -317,14 +323,9 @@ void DrawRoom()
 	glPopAttrib();
 	glPopMatrix();
 
-	
-	/* Set the coordinate system. */
-	glOrtho(0, 800, 600, 0, -1, 1);
-	
-	
 	glPushMatrix();
-	GLfloat light_position[] = { 0, 0, 4,1 };
-	GLfloat light_2_position[] = { -400,0,5,1 };
+	GLfloat light_position[] = { 0, 0, 0,1 };
+	GLfloat light_2_position[] = { 0,0,-6,0 };
 	//std::cout << currLightPosY << endl;
 	GLfloat ambient[] = { 0,0,0,1 };
 	GLfloat diffuse[] = { 1,1,1,1 };
@@ -339,13 +340,19 @@ void DrawRoom()
 	glLightModelfv(GL_FRONT_AND_BACK, glLight);
 	glEnable(GL_LIGHT0);
 
-	glLightfv(GL_LIGHT1, GL_POSITION, light_2_position);
-	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse);
-	glLightfv(GL_LIGHT1, GL_SPECULAR, specular);
+	glLightfv(GL_LIGHT6, GL_POSITION, light_2_position);
+	glLightfv(GL_LIGHT6, GL_AMBIENT, ambient);
+	glLightfv(GL_LIGHT6, GL_DIFFUSE, diffuse);
+	glLightfv(GL_LIGHT6, GL_SPECULAR, specular);
 	glLightModelfv(GL_FRONT_AND_BACK, glLight);
-	//glEnable(GL_LIGHT1);
+	glEnable(GL_LIGHT6);
 	glPopMatrix();
+
+	/* Set the coordinate system. */
+	glOrtho(0, 800, 600, 0, -1, 1);
+	
+	
+	
 
 
 	/* Draw walls. */
@@ -480,7 +487,23 @@ void DrawRoom()
 	glPopMatrix();
 }
 
-void menu(int value) {
+void menu() {
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set background color to black and opaque
+	glClear(GL_COLOR_BUFFER_BIT);         // Clear the color buffer (background)
+
+										  // Draw a Red 1x1 Square centered at origin
+	glBegin(GL_QUADS);              // Each set of 4 vertices form a quad
+	glColor3f(1.0f, 0.0f, 0.0f); // Red
+	glVertex2f(-0.5f, -0.5f);    // x, y
+	glVertex2f(0.5f, -0.5f);
+	glVertex2f(0.5f, 0.5f);
+	glVertex2f(-0.5f, 0.5f);
+	glEnd();
+
+	glFlush();
+}
+
+void theMenu(int val) {
 
 }
 
@@ -514,7 +537,7 @@ int main(int argc, char **argv)
 	glLoadIdentity();
 
 	gluPerspective(80.0, 800.0 / 600.0, 0.1, 100.0);
-
+	
 	/* We now switch to the modelview matrix. */
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -534,8 +557,8 @@ int main(int argc, char **argv)
 
 	glColor4d(1, 1, 1, 1);
 
-	Textures[0] = GrabTexObjFromFile("Data/Wall.png");
-	Textures[1] = GrabTexObjFromFile("Data/Floor.png");
+	Textures[0] = GrabTexObjFromFile("Data/star.png");
+	Textures[1] = GrabTexObjFromFile("Data/star.png");
 	Textures[2] = GrabTexObjFromFile("Data/Box.png");			//Added!
 
 																//Replaced this with a loop that immediately checks the entire array.
@@ -559,6 +582,8 @@ int main(int argc, char **argv)
 
 	SDL_Event event;
 
+	bool Menu(false);
+
 	int RelX(0), RelY(0);
 	int MovementDelay(SDL_GetTicks());
 
@@ -572,7 +597,7 @@ int main(int argc, char **argv)
 	};
 
 	//glutCreateWindow("version 3");
-	glutCreateMenu(menu);
+	glutCreateMenu(theMenu);
 	glutAddMenuEntry("hello", 1);
 	glutAddMenuEntry("hello", 2);
 	glutAddMenuEntry("hello", 3);
@@ -589,7 +614,7 @@ int main(int argc, char **argv)
 				break;
 
 			/* Mouse events? */
-			else if (event.type == SDL_MOUSEMOTION)
+			else if (event.type == SDL_MOUSEMOTION && !Menu)
 			{
 				/* Get the relative mouse movement of the mouse (based on CurMouseCoord - PrevMouseCoord). */
 				SDL_GetRelativeMouseState(&RelX, &RelY);
@@ -612,20 +637,33 @@ int main(int argc, char **argv)
 			else if (event.type == SDL_KEYDOWN)
 			{
 				if (event.key.keysym.sym == SDLK_ESCAPE)
-					break;
+					if (Menu) { 
+						Menu = false;
+						glEnable(GL_DEPTH_TEST);
+					}
+					else break;
+				else if (event.key.keysym.sym == SDLK_m) {
+					Menu = true;
+					glDisable(GL_DEPTH_TEST);
+				}
+				else {
+					if (event.key.keysym.sym == SDLK_k)
+						glPolygonMode(GL_FRONT_AND_BACK, ((Wireframe = !Wireframe) ? GL_LINE : GL_FILL));
 
-				if (event.key.keysym.sym == SDLK_k)
-					glPolygonMode(GL_FRONT_AND_BACK, ((Wireframe = !Wireframe) ? GL_LINE : GL_FILL));
 
-				if (event.key.keysym.sym == SDLK_UP)			Keys[0] = true;
-				if (event.key.keysym.sym == SDLK_DOWN)		Keys[1] = true;
-				if (event.key.keysym.sym == SDLK_LEFT)		Keys[2] = true;
-				if (event.key.keysym.sym == SDLK_RIGHT)		Keys[3] = true;
+
+					if (event.key.keysym.sym == SDLK_UP)		Keys[0] = true;
+					if (event.key.keysym.sym == SDLK_DOWN)		Keys[1] = true;
+					if (event.key.keysym.sym == SDLK_LEFT)		Keys[2] = true;
+					if (event.key.keysym.sym == SDLK_RIGHT)		Keys[3] = true;
+				}
+
+				
 			}
 
 			else if (event.type == SDL_KEYUP)
 			{
-				if (event.key.keysym.sym == SDLK_UP)			Keys[0] = false;
+				if (event.key.keysym.sym == SDLK_UP)		Keys[0] = false;
 				if (event.key.keysym.sym == SDLK_DOWN)		Keys[1] = false;
 				if (event.key.keysym.sym == SDLK_LEFT)		Keys[2] = false;
 				if (event.key.keysym.sym == SDLK_RIGHT)		Keys[3] = false;
@@ -635,8 +673,16 @@ int main(int argc, char **argv)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glPushMatrix();
-		DrawRoom();
+		if (!Menu) {
+			
+			DrawRoom();
+			
+		}
+		else {
+			menu();
+		}
 		glPopMatrix();
+		
 		
 		
 
