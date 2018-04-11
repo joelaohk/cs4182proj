@@ -11,12 +11,18 @@
 #include <string>
 #include <cmath>
 
+#include <Windows.h>
 #include <iostream>
+#include <fstream>
+#include <algorithm>
+#include <cstdio>
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 #include <SDL/SDL_image.h>
 #include <GL\glut.h>
 #include <GL/GL.h>
+#include <vector>
+#include <windows.h>
 
 using namespace std;
 
@@ -131,11 +137,203 @@ void CompileLists()
 	glEndList();
 }
 
+struct coordinate {
+	float x, y, z;
+	coordinate(float a, float b, float c) : x(a), y(b), z(c) {};
+};
+
+struct tex {
+	float x, y;
+	tex(float a, float b) : x(a), y(b) {};
+};
+//for faces, it can contain triangles and quads as well, the four variable contain which is that
+
+struct quad {
+	int quadNum;
+	float normalVector[3];
+	float vertexNumber[3];
+
+};
+
+int loadObject(const char* filename)
+{
+	std::vector<std::string*> coord;        //read every single line of the obj file as a string
+	std::vector<coordinate*> vertex;
+	//std::vector<face*> faces;
+	std::vector<coordinate*> normals;
+	std::vector<tex*> textures;
+	std::vector< unsigned int > vertexIndicesQ, uvIndicesQ, normalIndicesQ, vertexIndicesT, uvIndicesT, normalIndicesT;
+
+	//normal vectors for every face
+	std::ifstream in(filename);     //open the .obj file
+	if (!in.is_open())       //if not opened, exit with -1
+	{
+		std::cout << "Nor oepened" << std::endl;
+		return -1;
+	}
+	char buf[256];
+	//read in every line to coord
+	while (!in.eof())
+	{
+		in.getline(buf, 256);
+		coord.push_back(new std::string(buf));
+	}
+	//go through all of the elements of coord, and decide what kind of element is that
+	for (int i = 0; i < coord.size(); i++)
+	{
+		if (coord[i]->c_str()[0] == '#')   //if it is a comment (the first character is #)
+			continue;       //we don't care about that
+		else if (coord[i]->c_str()[0] == 'v' && coord[i]->c_str()[1] == ' ') //if vector
+		{
+			float tmpx, tmpy, tmpz;
+			sscanf_s(coord[i]->c_str(), "v %f %f %f", &tmpx, &tmpy, &tmpz);       //read in the 3 float coordinate to tmpx,tmpy,tmpz	
+
+																				  // For each coordinate, apply a translation
+			tmpz = tmpz - 1.0;
+			tmpx = tmpx - 0.5;
+			tmpy = tmpy - 0.5;
+
+			vertex.push_back(new coordinate(tmpx, tmpy, tmpz));       //and then add it to the end of our vertex list
+		}
+		else if (coord[i]->c_str()[0] == 'v' && coord[i]->c_str()[1] == 'n')        //if normal vector
+		{
+			float tmpx, tmpy, tmpz;   //do the same thing
+			sscanf_s(coord[i]->c_str(), "vn %f %f %f", &tmpx, &tmpy, &tmpz);
+			normals.push_back(new coordinate(tmpx, tmpy, tmpz));
+		}
+		else if (coord[i]->c_str()[0] == 'v' && coord[i]->c_str()[1] == 't') // texture coordinate
+		{
+			float tmpx, tmpy;
+			sscanf_s(coord[i]->c_str(), "vt %f %f", &tmpx, &tmpy);
+			textures.push_back(new tex(tmpx, tmpy));
+		}
+		else if (coord[i]->c_str()[0] == 'f')     //if face (quad)
+		{
+
+			if (count(coord[i]->begin(), coord[i]->end(), ' ') == 3) {
+				unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+
+				int matches = sscanf_s(coord[i]->c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d",
+					&vertexIndex[0], &uvIndex[0], &normalIndex[0],
+					&vertexIndex[1], &uvIndex[1], &normalIndex[1],
+					&vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+
+				vertexIndicesT.push_back(vertexIndex[0]);
+				vertexIndicesT.push_back(vertexIndex[1]);
+				vertexIndicesT.push_back(vertexIndex[2]);
+				uvIndicesT.push_back(uvIndex[0]);
+				uvIndicesT.push_back(uvIndex[1]);
+				uvIndicesT.push_back(uvIndex[2]);
+				normalIndicesT.push_back(normalIndex[0]);
+				normalIndicesT.push_back(normalIndex[1]);
+				normalIndicesT.push_back(normalIndex[2]);
+
+			}
+			else if (count(coord[i]->begin(), coord[i]->end(), ' ') == 4) {
+				unsigned int vertexIndex[4], uvIndex[4], normalIndex[4];
+
+				int matches = sscanf_s(coord[i]->c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d",
+					&vertexIndex[0], &uvIndex[0], &normalIndex[0],
+					&vertexIndex[1], &uvIndex[1], &normalIndex[1],
+					&vertexIndex[2], &uvIndex[2], &normalIndex[2],
+					&vertexIndex[3], &uvIndex[3], &normalIndex[3]);
+
+				vertexIndicesQ.push_back(vertexIndex[0]);
+				vertexIndicesQ.push_back(vertexIndex[1]);
+				vertexIndicesQ.push_back(vertexIndex[2]);
+				vertexIndicesQ.push_back(vertexIndex[3]);
+				uvIndicesQ.push_back(uvIndex[0]);
+				uvIndicesQ.push_back(uvIndex[1]);
+				uvIndicesQ.push_back(uvIndex[2]);
+				uvIndicesQ.push_back(uvIndex[3]);
+				normalIndicesQ.push_back(normalIndex[0]);
+				normalIndicesQ.push_back(normalIndex[1]);
+				normalIndicesQ.push_back(normalIndex[2]);
+				normalIndicesQ.push_back(normalIndex[3]);
+			}
+		}
+		// At this point, have lists of normals, vertices, texture coordinates, and quad faces
+		//raw
+	}
+	int num;        //the id for the list
+	num = glGenLists(1);      //generate a uniqe
+	glNewList(num, GL_COMPILE);      //and create it
+
+	for (int idx = 1; idx < vertexIndicesQ.size(); idx = idx + 4) {
+		glBegin(GL_QUADS);
+
+		glNormal3f(normals[normalIndicesQ[idx] - 1]->x, normals[normalIndicesQ[idx - 1] - 1]->y, normals[normalIndicesQ[idx - 1] - 1]->z);
+		glVertex3f(vertex[vertexIndicesQ[idx] - 1]->x, vertex[vertexIndicesQ[idx] - 1]->y, vertex[vertexIndicesQ[idx] - 1]->z);
+		glVertex3f(vertex[vertexIndicesQ[idx + 0] - 1]->x, vertex[vertexIndicesQ[idx + 0] - 1]->y, vertex[vertexIndicesQ[idx + 0] - 1]->z);
+		glVertex3f(vertex[vertexIndicesQ[idx + 1] - 1]->x, vertex[vertexIndicesQ[idx + 1] - 1]->y, vertex[vertexIndicesQ[idx + 1] - 1]->z);
+		glVertex3f(vertex[vertexIndicesQ[idx + 2] - 1]->x, vertex[vertexIndicesQ[idx + 2] - 1]->y, vertex[vertexIndicesQ[idx + 2] - 1]->z);
+
+		glEnd();
+
+	}
+	for (int idx = 0; idx < vertexIndicesT.size(); idx = idx + 3) {
+		glBegin(GL_TRIANGLES);
+
+		glNormal3f(normals[normalIndicesT[idx] - 1]->x, normals[normalIndicesT[idx] - 1]->y, normals[normalIndicesT[idx] - 1]->z);
+		glVertex3f(vertex[vertexIndicesT[idx] - 1]->x, vertex[vertexIndicesT[idx] - 1]->y, vertex[vertexIndicesT[idx] - 1]->z);
+		glVertex3f(vertex[vertexIndicesT[idx + 0] - 1]->x, vertex[vertexIndicesT[idx + 0] - 1]->y, vertex[vertexIndicesT[idx + 0] - 1]->z);
+		glVertex3f(vertex[vertexIndicesT[idx + 1] - 1]->x, vertex[vertexIndicesT[idx + 1] - 1]->y, vertex[vertexIndicesT[idx + 1] - 1]->z);
+
+		glEnd();
+	}
+	glEndList();
+	//delete everything to avoid memory leaks
+	for (int i = 0; i < coord.size(); i++)
+		delete coord[i];
+	for (int i = 0; i < normals.size(); i++)
+		delete normals[i];
+	for (int i = 0; i < vertex.size(); i++)
+		delete vertex[i];
+	for (int i = 0; i < textures.size(); i++)
+		delete textures[i];
+
+	return num;     //return with the id
+}
+
 double currLightPosX=4.0, currLightPosY = 2.0, currLightPosZ = 2.0;
 
 double init = -0.8;
 double xPos = init;
 char direction = 'N';
+
+bool r_drop = false;
+bool r_rise = false;
+double r_dropPos = 0;
+double r_risePos = r_dropPos;
+double r_time = 0;
+
+bool b_drop = false;
+bool b_rise = false;
+double b_dropPos = 0;
+double b_risePos = b_dropPos;
+double b_time = 0;
+
+bool y_drop = false;
+bool y_rise = false;
+double y_dropPos = 0;
+double y_risePos = y_dropPos;
+double y_time = 0;
+
+bool g_drop = false;
+bool g_rise = false;
+double g_dropPos = 0;
+double g_risePos = g_dropPos;
+double g_time = 0;
+
+bool p_drop = false;
+bool p_rise = false;
+double p_dropPos = 0;
+double p_risePos = p_dropPos;
+double p_time = 0;
+
+double nextPos(double time) {
+	return (1 * time + 0.5 * 15 * time * time);
+}
 
 /*
 * DrawRoom
@@ -151,7 +349,8 @@ void DrawRoom()
 	static float FloorTexHeight(0.f);
 
 	static bool Once(false);
-
+	static bool doggie(false);
+	static int listNum = -1;
 	/* Perform this check only once. */
 	if (!Once)
 	{
@@ -219,17 +418,32 @@ void DrawRoom()
 	////glEnable(GL_LIGHT1);
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, redballAmbient);
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballAmbient);
-	glColor3f(0.9725, 0.3137, 0.2706);
-	glutSolidSphere(0.1, 20, 20);
 	glPushMatrix();
-	glScalef(1.1, 1.1, 1.1);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballDiffuse);
-	glutSolidSphere(0.1, 20, 20);
-	glPopMatrix();
-	glPushMatrix();
-	glScalef(1.2, 1.2, 1.2);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballDiffuse2);
-	glutSolidSphere(0.1, 20, 20);
+	if (r_drop) {
+		glTranslated(0, r_dropPos, 0);
+		r_time += 0.0001;
+		r_dropPos = r_dropPos - nextPos(r_time);
+		r_dropPos = r_dropPos <= -0.5 ? -0.5 : r_dropPos;
+		r_risePos = r_dropPos;
+	}
+	if (r_rise) {
+		glTranslated(0, r_risePos, 0);
+		r_risePos = r_risePos + 0.001;
+		if (r_risePos >= 0) {
+			r_risePos = 0;
+			r_rise = false;
+
+		}
+			
+		r_dropPos = r_risePos;
+	}
+		glColor3f(0.9725, 0.3137, 0.2706);
+		glutSolidSphere(0.1, 20, 20);
+		glPushMatrix();
+		glScalef(1.1, 1.1, 1.1);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, redballDiffuse);
+		glutSolidSphere(0.1, 20, 20);
+		glPopMatrix();
 	glPopMatrix();
 
 	glTranslated(0.5, 0, 0);
@@ -245,12 +459,32 @@ void DrawRoom()
 	//glEnable(GL_LIGHT2);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, blueballAmbient);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, blueballAmbient);
-	glColor3f(0.27451, 0.41961, 0.72549);
-	glutSolidSphere(0.1, 20, 20);
 	glPushMatrix();
-	glScalef(1.1, 1.1, 1.1);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, blueballDiffuse);
-	glutSolidSphere(0.1, 20, 20);
+	if (b_drop) {
+		glTranslated(0, b_dropPos, 0);
+		b_time += 0.0001;
+		b_dropPos = b_dropPos - nextPos(b_time);
+		b_dropPos = b_dropPos <= -0.5 ? -0.5 : b_dropPos;
+		b_risePos = b_dropPos;
+	}
+	if (b_rise) {
+		glTranslated(0, b_risePos, 0);
+		b_risePos = b_risePos + 0.001;
+		if (b_risePos >= 0) {
+			b_risePos = 0;
+			b_rise = false;
+
+		}
+
+		b_dropPos = b_risePos;
+	}
+		glColor3f(0.27451, 0.41961, 0.72549);
+		glutSolidSphere(0.1, 20, 20);
+		glPushMatrix();
+		glScalef(1.1, 1.1, 1.1);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, blueballDiffuse);
+		glutSolidSphere(0.1, 20, 20);
+		glPopMatrix();
 	glPopMatrix();
 
 	GLfloat yellowballAmbient[] = { 0.9922, 0.9647, 0.3569, 1 };
@@ -265,14 +499,34 @@ void DrawRoom()
 	//glEnable(GL_LIGHT3);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, yellowballAmbient);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, yellowballAmbient);
-	glColor3f(0.9922, 0.9647, 0.3569);
-	glutSolidSphere(0.1, 20, 20);
-	glColor3f(0.9922, 0.9647, 0.3569);
-	glutSolidSphere(0.1, 20, 20);
 	glPushMatrix();
-	glScalef(1.1, 1.1, 1.1);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, yellowballDiffuse);
-	glutSolidSphere(0.1, 20, 20);
+		if (y_drop) {
+			glTranslated(0, y_dropPos, 0);
+			y_time += 0.0001;
+			y_dropPos = y_dropPos - nextPos(y_time);
+			y_dropPos = y_dropPos <= -0.5 ? -0.5 : y_dropPos;
+			y_risePos = y_dropPos;
+		}
+		if (y_rise) {
+			glTranslated(0, y_risePos, 0);
+			y_risePos = y_risePos + 0.001;
+			if (y_risePos >= 0) {
+				y_risePos = 0;
+				y_rise = false;
+
+			}
+
+			y_dropPos = y_risePos;
+		}
+		glColor3f(0.9922, 0.9647, 0.3569);
+		glutSolidSphere(0.1, 20, 20);
+		glColor3f(0.9922, 0.9647, 0.3569);
+		glutSolidSphere(0.1, 20, 20);
+		glPushMatrix();
+		glScalef(1.1, 1.1, 1.1);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, yellowballDiffuse);
+		glutSolidSphere(0.1, 20, 20);
+		glPopMatrix();
 	glPopMatrix();
 
 	GLfloat greenballAmbient[] = { 0.4392, 0.9373, 0.502, 1 };
@@ -287,12 +541,32 @@ void DrawRoom()
 	//glEnable(GL_LIGHT4);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, greenballAmbient);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, greenballAmbient);
-	glColor4fv(greenballAmbient);
-	glutSolidSphere(0.1, 20, 20);
 	glPushMatrix();
-	glScalef(1.1, 1.1, 1.1);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, greenballDiffuse);
-	glutSolidSphere(0.1, 20, 20);
+		if (g_drop) {
+			glTranslated(0, g_dropPos, 0);
+			g_time += 0.0001;
+			g_dropPos = g_dropPos - nextPos(g_time);
+			g_dropPos = g_dropPos <= -0.5 ? -0.5 : g_dropPos;
+			g_risePos = g_dropPos;
+		}
+		if (g_rise) {
+			glTranslated(0, g_risePos, 0);
+			g_risePos = g_risePos + 0.001;
+			if (g_risePos >= 0) {
+				g_risePos = 0;
+				g_rise = false;
+
+			}
+
+			g_dropPos = g_risePos;
+		}
+		glColor4fv(greenballAmbient);
+		glutSolidSphere(0.1, 20, 20);
+		glPushMatrix();
+		glScalef(1.1, 1.1, 1.1);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, greenballDiffuse);
+		glutSolidSphere(0.1, 20, 20);
+		glPopMatrix();
 	glPopMatrix();
 
 	GLfloat purple_light_position[] = { 0,0,0,1 };
@@ -309,13 +583,33 @@ void DrawRoom()
 	//glEnable(GL_LIGHT5);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, purpleballAmbient);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, purpleballAmbient);
-	glColor3f(0.6863, 0.4353, 0.7725);
-	glutSolidSphere(0.1, 20, 20);
-	glColor3f(1, 1, 1);
 	glPushMatrix();
-	glScalef(1.1, 1.1, 1.1);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, purpleballDiffuse);
-	glutSolidSphere(0.1, 20, 20);
+		if (p_drop) {
+			glTranslated(0, p_dropPos, 0);
+			p_time += 0.0001;
+			p_dropPos = p_dropPos - nextPos(p_time);
+			p_dropPos = p_dropPos <= -0.5 ? -0.5 : p_dropPos;
+			p_risePos = p_dropPos;
+		}
+		if (p_rise) {
+			glTranslated(0, p_risePos, 0);
+			p_risePos = p_risePos + 0.001;
+			if (p_risePos >= 0) {
+				p_risePos = 0;
+				p_rise = false;
+
+			}
+
+			p_dropPos = p_risePos;
+		}
+		glColor3f(0.6863, 0.4353, 0.7725);
+		glutSolidSphere(0.1, 20, 20);
+		glColor3f(1, 1, 1);
+		glPushMatrix();
+		glScalef(1.1, 1.1, 1.1);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, purpleballDiffuse);
+		glutSolidSphere(0.1, 20, 20);
+		glPopMatrix();
 	glPopMatrix();
 	
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, normal);
@@ -324,7 +618,7 @@ void DrawRoom()
 	glPopMatrix();
 
 	glPushMatrix();
-	GLfloat light_position[] = { 0, 0, 0,1 };
+	GLfloat light_position[] = { -2, 0, -1,1 };
 	GLfloat light_2_position[] = { 0,0,-6,0 };
 	//std::cout << currLightPosY << endl;
 	GLfloat ambient[] = { 0,0,0,1 };
@@ -478,6 +772,11 @@ void DrawRoom()
 		* to turn on wireframe mode, with these extra polygons, it looks pretty neat!
 		*/
 		glCallList(BoxList);
+
+		if (!doggie) {
+			listNum = loadObject("Wolf_obj.obj");
+			doggie = true;
+		}
 	}
 
 	
@@ -485,6 +784,10 @@ void DrawRoom()
 	glPopMatrix();
 
 	glPopMatrix();
+	glCallList(listNum);
+	//glBindTexture(GL_TEXTURE_2D, Textures[0]);
+	
+
 }
 
 void menu() {
@@ -505,6 +808,7 @@ void menu() {
 
 void theMenu(int val) {
 
+	glutPostRedisplay();
 }
 
 int main(int argc, char **argv)
@@ -640,16 +944,52 @@ int main(int argc, char **argv)
 					if (Menu) { 
 						Menu = false;
 						glEnable(GL_DEPTH_TEST);
+						SDL_ShowCursor(SDL_DISABLE);
 					}
 					else break;
 				else if (event.key.keysym.sym == SDLK_m) {
 					Menu = true;
 					glDisable(GL_DEPTH_TEST);
+					SDL_ShowCursor(SDL_ENABLE);
 				}
-				else {
+				else if (!Menu) {
 					if (event.key.keysym.sym == SDLK_k)
 						glPolygonMode(GL_FRONT_AND_BACK, ((Wireframe = !Wireframe) ? GL_LINE : GL_FILL));
 
+					if (event.key.keysym.sym == SDLK_b) {
+						PlaySound(TEXT("Data/bark.wav"), NULL, SND_FILENAME || SND_ASYNC);
+					}
+
+					if (event.key.keysym.sym == SDLK_a) {
+						PlaySound(TEXT("Data/c.wav"), NULL, SND_FILENAME || SND_ASYNC);
+						r_drop = true;
+						r_rise = false;
+							
+					}
+
+					if (event.key.keysym.sym == SDLK_s) {
+						PlaySound(TEXT("Data/d.wav"), NULL, SND_FILENAME || SND_ASYNC);
+						b_drop = true;
+						b_rise = false;
+					}
+
+					if (event.key.keysym.sym == SDLK_d) {
+						PlaySound(TEXT("Data/e.wav"), NULL, SND_FILENAME || SND_ASYNC);
+						y_drop = true;
+						y_rise = false;
+					}
+
+					if (event.key.keysym.sym == SDLK_f) {
+						PlaySound(TEXT("Data/f.wav"), NULL, SND_FILENAME || SND_ASYNC);
+						g_drop = true;
+						g_rise = false;
+					}
+
+					if (event.key.keysym.sym == SDLK_g) {
+						PlaySound(TEXT("Data/g.wav"), NULL, SND_FILENAME || SND_ASYNC);
+						p_drop = true;
+						p_rise = false;
+					}
 
 
 					if (event.key.keysym.sym == SDLK_UP)		Keys[0] = true;
@@ -661,8 +1001,34 @@ int main(int argc, char **argv)
 				
 			}
 
-			else if (event.type == SDL_KEYUP)
+			else if (event.type == SDL_KEYUP && !Menu)
 			{
+				
+				if (event.key.keysym.sym == SDLK_a) {
+					r_rise = true;
+					r_drop = false;
+					r_time = 0;
+				}
+				if (event.key.keysym.sym == SDLK_s) {
+					b_rise = true;
+					b_drop = false;
+					b_time = 0;
+				}
+				if (event.key.keysym.sym == SDLK_d) {
+					y_rise = true;
+					y_drop = false;
+					y_time = 0;
+				}
+				if (event.key.keysym.sym == SDLK_f) {
+					g_rise = true;
+					g_drop = false;
+					g_time = 0;
+				}
+				if (event.key.keysym.sym == SDLK_g) {
+					p_rise = true;
+					p_drop = false;
+					p_time = 0;
+				}
 				if (event.key.keysym.sym == SDLK_UP)		Keys[0] = false;
 				if (event.key.keysym.sym == SDLK_DOWN)		Keys[1] = false;
 				if (event.key.keysym.sym == SDLK_LEFT)		Keys[2] = false;
